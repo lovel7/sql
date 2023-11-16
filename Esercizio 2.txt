@@ -1,0 +1,137 @@
+--CREARE TABELLA AUTORI
+
+CREATE TABLE Autori (
+AutoreID VARCHAR (50) NOT NULL, 
+Nome VARCHAR (50) NOT NULL,
+Cognome VARCHAR (50) NOT NULL,
+AnnoN int,
+AnnoM int,
+Sesso VARCHAR (1),
+Nazione VARCHAR (50),
+PRIMARY KEY (AutoreID)
+);
+
+--CREARE TABELLA LIBRI
+
+CREATE TABLE `libri` (
+  `LibroID` varchar(50) NOT NULL,
+  `Titolo` varchar(150) NOT NULL,
+  `numPag` int DEFAULT NULL,
+  `Anno` int DEFAULT NULL,
+  `AutoreID` varchar(50) NOT NULL,
+  PRIMARY KEY (`LibroID`),
+  KEY `AutoreID` (`AutoreID`),
+  CONSTRAINT `libri_ibfk_1` FOREIGN KEY (`AutoreID`) REFERENCES `autori` (`AutoreID`)
+)
+
+--INSERIMENTO DATI TABELLA AUTORI
+
+INSERT INTO autori (AutoreID, Nome, Cognome, AnnoN, AnnoM, Sesso, Nazione)
+VALUES 
+('ALEMAN', 'Alessandro', 'Manzoni', 1785, 1873, 'M', 'Italia'),
+('LEVTOL', 'Lev', 'Tolstoi', 1828, 1910, 'M', 'Russia'),
+('VESBRU', 'Bruno', 'Vespa', 1944 , NULL, 'M', 'Italia'),
+('KINGST', 'Stephen', 'King', 1947, NULL, 'M', 'America'),
+('HEMERN', 'Ernest', 'Hemingway', 1899, 1961, 'M', 'America'),
+('ECOUMB', 'Umberto', 'Eco', 1932, 2016, 'm', 'Italia'),
+('TAMSUS', 'Susanna', 'Tamaro', 1957, NULL, 'F', 'Italia'),
+('WOOLFV', 'Virginia', 'Woolf', 1882, 1941, 'F', 'Inghilterra'),
+('CHRISAG', 'Agatha', 'Christie', 1890, 1976, 'F', 'Inghilterra');
+
+--INSERIMENTO DATI TABELLA LIBRI
+
+INSERT INTO libri (LibroID, Titolo, numPag, Anno, AutoreID)
+VALUES 
+('PROM1', 'I promessi sposi', 1064, 1840, 'ALEMAN'),
+('STCOL2', 'Storia della colonna infame', 650, 1840, 'ALEMAN'),
+('GUEPA3', 'Guerra e pace', 1463, 1865, 'LEVTOL'),
+('KARAN4', 'Anna Karenina', 895, 1877, 'LEVTOL'),
+('DONPO5', 'Donne al potere', 336, 2022, 'VESBRU'),
+('GRATE6', 'La grande tempesta', 408, 2022, 'VESBRU'),
+('Miser7', 'Misery', 400, 1987, 'KINGST'),
+('IT8', 'It', 1012, 1986, 'KINGST'),
+('SHIN9', 'Shining', 592, 1977, 'KINGST'),
+('VECC10', 'Il vecchio e il mare', 204, 1952, 'HEMERN'),
+('CAM11', 'Per chi suona la campana', 518, 1940, 'HEMERN'),
+('FIE12', 'Fiesta', 288, 1926, 'HEMERN'),
+('ROSA13', 'Il nome della rosa', 624, 1980, 'ECOUMB'),
+('PEND14', 'Il pendolo di Foucault', 430, 1988, 'ECOUMB'),
+('PORT15', 'Va dove ti porta il cuore', 268, 1994, 'TAMSUS'),
+('GIT16', 'Gita al faro', 370, 1927, 'TAMSUS'),
+('ORL17', 'Orlando', 680, 1928, 'WOOLFV'),
+('ASS18', "Assassinio sull'Orient Express", 350, 1934, 'CHRISAG'),
+('SIP19', 'Sipario', 204, 1975, 'CHRISAG');
+
+--1: estrarre numero di libri per nazione in ordine decrescente di numero:
+
+SELECT Nazione, COUNT(LibroID) AS numero_libri
+FROM autori
+JOIN libri ON libri.AutoreID = autori.AutoreID
+GROUP BY Nazione
+ORDER BY numero_libri DESC;
+
+-2 estrarre gli autori/autrici italiani o inglesi che hanno scritto piu' di 1 libro e che sono ancora vivi:
+
+SELECT autori.Nome, autori.Cognome, autori.Nazione, COUNT(libri.LibroID) AS NumeroLibri
+FROM autori
+JOIN libri ON autori.AutoreID = libri.AutoreID
+WHERE (autori.Nazione = 'Italia' OR autori.Nazione = 'Inghilterra')
+  AND (YEAR(CURRENT_DATE()) - autori.AnnoM > 0)
+GROUP BY autori.AutoreID
+HAVING NumeroLibri > 1;
+
+--3 
+estrarre i romanzi di autori/ci americani nati dopo il 1945 e i romanzi di autori italiani che finiscono con la lettera o
+
+select libri.Titolo, autori.Nome, autori.Cognome, autori.AnnoN, autori.Nazione
+from libri
+join autori on libri.AutoreID= autori.AutoreID
+where (autori.AnnoN > 1945 and autori.Nazione = 'America') OR
+(autori.Nazione = 'Italia' and libri.Titolo like '%o');
+
+--4 estrarre i romanzi che sono stati scritti più di 30 anni fa:
+
+SELECT LIBRI.Titolo, LIBRI.Anno, AUTORI.Nome, AUTORI.Cognome
+FROM LIBRI
+JOIN AUTORI ON LIBRI.AutoreID = AUTORI.AutoreID
+WHERE LIBRI.Anno < YEAR(CURRENT_DATE()) - 30;
+
+--5 estrarre la lista completa dei libri di autrici:
+
+select libri.*, autori.Sesso 
+from libri
+join autori on libri.AutoreID = autori.AutoreID
+where autori.sesso = 'F';
+
+--6 estrarre i libri con il titolo piu' lungo di 8 caratteri:
+
+select Titolo, length(Titolo) as LunghezzaTitolo
+from libri
+where length(Titolo) >8;
+
+7--estrarre i libri con piu' di 100 pagine di autori/autrici russi e italiani:
+
+select libri.Titolo, libri.numPag, autori.Nazione
+from libri
+join autori on libri.AutoreID = autori.AutoreID
+where autori.Nazione IN ('Italia', 'Russia') AND libri.numPag > 100;
+
+8-- estrarre libri con meno di 200 pagine e titolo che inizia con la lettera i:
+
+select Titolo, numPag from libri
+where numPag < 200 AND titolo Like 'i%';
+
+9-- estrarre i libri coi dati dei relativi autori pubblicati tra il 1960 e il 2000
+
+select libri.Titolo, libri.Anno, autori.AutoreID, autori.Nome, autori.Cognome, autori.Annon, autori.annoM, autori.sesso, autori.Nazione
+from libri
+join autori on libri.AutoreID = libri.AutoreID
+where libri.Anno > 1960 and libri.Anno < 2000
+
+--10  ottenere il numero di autori con i loro dati che hanno scritto piu' di 2 libri 
+
+select autori.Nome, autori.Cognome, autori.Nazione, COUNT(libri.AutoreID) as numeroLibri
+from autori
+join libri on autori.AutoreID = libri.AutoreID  
+GROUP BY autori.AutoreID 
+having count(libri.AutoreID) > 2;
